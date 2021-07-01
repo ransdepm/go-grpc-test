@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pb_pubsub;
+
+option go_package = "bitbucket.org/appetize_backend/pubsub-pb-go;pubsub_pb_go";
+
+// Interface exported by the server.
+service Pubsub {
+  // A server-to-client streaming RPC.
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeStreamResponse) {}
+}
+
+message SubscribeRequest {
+  string TopicName = 1;
+}
+
+message SubscribeStreamResponse {
+  string id = 1;
+  string type = 3;
+  string action = 5;
+  string timestamp = 7;
+  string resource_url = 9;
+}
