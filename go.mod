@@ -1,4 +1,4 @@
-module pb_pubsub
+module github.com/ransdepm/go-grpc-test
 
 go 1.16
 
