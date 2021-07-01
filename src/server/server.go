@@ -38,7 +38,7 @@ import (
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
-	pb "google.golang.org/grpc/examples/route_guide/routeguide"
+	pb "https://github.com/ransdepm/go-grpc-test"
 )
 
 var (

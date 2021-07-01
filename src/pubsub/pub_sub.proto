@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pb_pubsub;
 
-option go_package = "bitbucket.org/appetize_backend/pubsub-pb-go;pubsub_pb_go";
+option go_package = "hhttps://github.com/ransdepm/go-grpc-test;go_grpc_test";
 
 // Interface exported by the server.
 service Pubsub {
