@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -40,7 +39,7 @@ func grabTransactions(client pb.PubsubClient) {
 		if err != nil {
 			log.Fatalf("%v.Subscribe(_) = _, %v", client, err)
 		}
-		fmt.Println(prettyPrint(transaction))
+		log.Println(prettyPrint(transaction))
 	}
 }
 
@@ -53,6 +52,7 @@ func main() {
 	opts = append(opts, grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor()))
 
 	opts = append(opts, grpc.WithBlock())
+	log.Printf("Attempting to connect to %v", *serverAddr)
 	conn, err := grpc.Dial(*serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)

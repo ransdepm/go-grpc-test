@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+    grpc-client:
+        build:
+            context: .
+            dockerfile: Dockerfile_client
+        ports:
+            - 50005:50005
+        tty:
+            true
+        depends_on:
+            - grpc-server
+    grpc-server:
+        build:
+            context: .
+            dockerfile: Dockerfile_server
+        ports:
+            - 8080:8080
+        tty:
+            true
