@@ -38,7 +38,7 @@ import (
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
-	pb "github.com/ransdepm/go-grpc-test/pb"
+	pb "github.com/ransdepm/go-grpc-test/pubsub"
 )
 
 var (
@@ -49,7 +49,9 @@ var (
 	port       = flag.Int("port", 10000, "The server port")
 )
 
-type routeGuideServer struct {
+type pubSubServer struct {
+	//pb.mustEmbedUnimplementedPubsubServer
+	pb.UnimplementedPubsubServer
 	saveTransactions []*pb.SubscribeStreamResponse // read-only after initialized
 }
 
@@ -69,7 +71,7 @@ type Orders struct {
 }
 
 // Subscribe lists all features contained within the given bounding Rectangle.
-func (s *routeGuideServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsub_SubscribeServer) error {
+func (s *pubSubServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsub_SubscribeServer) error {
 	for true {
 		var token = getAuth()
 		var txs = getOrders(token)
@@ -84,9 +86,8 @@ func (s *routeGuideServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsu
 	return nil
 }
 
-func newServer() *routeGuideServer {
-	s := &routeGuideServer{}
-	s.loadTransactions(*jsonDBFile)
+func newServer() *pubSubServer {
+	s := &pubSubServer{}
 	return s
 }
 
@@ -225,60 +226,3 @@ func goDotEnvVariable(key string) string {
 
 	return os.Getenv(key)
 }
-
-// loadTransactions loads features from a JSON file.
-func (s *routeGuideServer) loadTransactions(filePath string) {
-	var data []byte
-	if filePath != "" {
-		var err error
-		data, err = ioutil.ReadFile(filePath)
-		if err != nil {
-			log.Fatalf("Failed to load default features: %v", err)
-		}
-	} else {
-		data = exampleData
-	}
-	if err := json.Unmarshal(data, &s.saveTransactions); err != nil {
-		log.Fatalf("Failed to load default features: %v", err)
-	}
-}
-
-// exampleData is a copy of testdata/route_guide_db.json. It's to avoid
-// specifying file path with `go run`.
-var exampleData = []byte(`[
-    {
-        "id": "4a9768ae-7b0b-4117-b728-54addb6866ce",
-        "type": "transaction",
-        "action": "sale",
-        "timestamp": "2021-05-25T19:15:01Z",
-        "resource_url": "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders/4a9768ae-7b0b-4117-b728-54addb6866ce"
-    },
-    {
-        "id": "1e074be5-d715-4c8d-9f03-6d3c9ce5dfad",
-        "type": "transaction",
-        "action": "sale",
-        "timestamp": "2021-05-25T19:32:43Z",
-        "resource_url": "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders/1e074be5-d715-4c8d-9f03-6d3c9ce5dfad"
-    },
-    {
-        "id": "85bb24e4-7630-4805-be26-3bd18cba30b6",
-        "type": "transaction",
-        "action": "sale",
-        "timestamp": "2021-05-26T10:16:12Z",
-        "resource_url": "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders/85bb24e4-7630-4805-be26-3bd18cba30b6"
-    },
-    {
-        "id": "425f21df-e9e0-4cab-b66c-b02f14df198d",
-        "type": "transaction",
-        "action": "sale",
-        "timestamp": "2021-05-28T12:18:36Z",
-        "resource_url": "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders/425f21df-e9e0-4cab-b66c-b02f14df198d"
-    },
-    {
-        "id": "391e01eb-638b-46f5-a25a-814b2078fedb",
-        "type": "transaction",
-        "action": "sale",
-        "timestamp": "2021-05-28T12:18:58Z",
-        "resource_url": "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders/391e01eb-638b-46f5-a25a-814b2078fedb"
-    }
-]`)

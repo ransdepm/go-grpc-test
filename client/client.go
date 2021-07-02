@@ -20,7 +20,7 @@
 // to perform unary, client streaming, server streaming and full duplex RPCs.
 //
 // It interacts with the route guide service whose definition can be found in routeguide/route_guide.proto.
-package pb_pubsub
+package main
 
 import (
 	"context"
@@ -36,8 +36,8 @@ import (
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/joho/godotenv"
 
+	pb "github.com/ransdepm/go-grpc-test/pubsub"
 	"google.golang.org/grpc"
-	pb "google.golang.org/grpc/examples/route_guide/routeguide"
 )
 
 var (
@@ -47,7 +47,7 @@ var (
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name used to verify the hostname returned by the TLS handshake")
 )
 
-func grabTransactions(client pb.RouteGuideClient) {
+func grabTransactions(client pb.PubsubClient) {
 	in := &pb.SubscribeRequest{
 		TopicName: "orders",
 	}
@@ -90,7 +90,7 @@ func main() {
 		log.Fatalf("fail to dial: %v", err)
 	}
 	defer conn.Close()
-	client := pb.NewRouteGuideClient(conn)
+	client := pb.NewPubsubClient(conn)
 
 	grabTransactions(client)
 }
