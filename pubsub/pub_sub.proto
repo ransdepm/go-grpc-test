@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pb_pubsub;
 
-option go_package = "hhttps://github.com/ransdepm/go-grpc-test;go_grpc_test";
+option go_package = "github.com/ransdepm/go-grpc-test;go_grpc_test";
 
 // Interface exported by the server.
 service Pubsub {

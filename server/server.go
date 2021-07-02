@@ -38,7 +38,7 @@ import (
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 
-	pb "https://github.com/ransdepm/go-grpc-test"
+	pb "github.com/ransdepm/go-grpc-test/pb"
 )
 
 var (
