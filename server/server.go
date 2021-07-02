@@ -42,9 +42,9 @@ import (
 )
 
 var (
-	jsonDBFile        = flag.String("json_db_file", "", "A json file containing a list of features")
-	port              = flag.Int("port", 10000, "The server port")
-	server_sleep, err = strconv.Atoi(goDotEnvVariable("STREAM_SLEEP"))
+	jsonDBFile             = flag.String("json_db_file", "", "A json file containing a list of features")
+	port, errPort          = strconv.Atoi(goDotEnvVariable("PORT"))
+	server_sleep, errSleep = strconv.Atoi(goDotEnvVariable("STREAM_SLEEP"))
 )
 
 type pubSubServer struct {
@@ -85,7 +85,7 @@ func (s *pubSubServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsub_Su
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

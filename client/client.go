@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	serverAddr         = flag.String("server_addr", "localhost:10000", "The server address in the format of host:port")
-	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name used to verify the hostname returned by the TLS handshake")
+	serverAddr = flag.String("server_addr", goDotEnvVariable("SERVER_HOST")+":"+goDotEnvVariable("PORT"), "The server address in the format of host:port")
 )
 
 func grabTransactions(client pb.PubsubClient) {
