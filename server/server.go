@@ -42,15 +42,12 @@ import (
 )
 
 var (
-	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "", "The TLS cert file")
-	keyFile    = flag.String("key_file", "", "The TLS key file")
-	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
-	port       = flag.Int("port", 10000, "The server port")
+	jsonDBFile        = flag.String("json_db_file", "", "A json file containing a list of features")
+	port              = flag.Int("port", 10000, "The server port")
+	server_sleep, err = strconv.Atoi(goDotEnvVariable("STREAM_SLEEP"))
 )
 
 type pubSubServer struct {
-	//pb.mustEmbedUnimplementedPubsubServer
 	pb.UnimplementedPubsubServer
 	saveTransactions []*pb.SubscribeStreamResponse // read-only after initialized
 }
@@ -81,14 +78,9 @@ func (s *pubSubServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsub_Su
 			}
 		}
 
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * time.Duration(server_sleep))
 	}
 	return nil
-}
-
-func newServer() *pubSubServer {
-	s := &pubSubServer{}
-	return s
 }
 
 func main() {
@@ -101,6 +93,11 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterPubsubServer(grpcServer, newServer())
 	grpcServer.Serve(lis)
+}
+
+func newServer() *pubSubServer {
+	s := &pubSubServer{}
+	return s
 }
 
 func getAuth() string {
@@ -140,7 +137,7 @@ func getOrders(token string) []pb.SubscribeStreamResponse {
 	var end string
 
 	end = time.Now().UTC().Format(time.RFC3339)
-	start = time.Now().Add(time.Second * -30).UTC().Format(time.RFC3339)
+	start = time.Now().Add(time.Second * time.Duration(-1*server_sleep)).UTC().Format(time.RFC3339)
 	url = "https://api-gw.latest.sf.appetize-dev.com/transactions_api/orders?start_date=" + start + "&end_date=" + end + "&page=1"
 
 	req, err := http.NewRequest("GET", url, nil)
