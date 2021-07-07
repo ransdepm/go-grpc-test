@@ -27,3 +27,28 @@ Likewise, to run the client:
 ```sh
 $ go run client/client.go
 ```
+
+
+If you want to run both the client and the server without regard for installing proper Go compilers, simly run docker compose
+```
+docker-compose up
+```
+
+However when deployed it will not run in such a manner as the server and client will be deployed independently
+
+First create a netowrk for the two docker images to run on
+```
+docker network create grpc-net
+```
+
+To use docker to build and run the client
+```
+docker build -f Dockerfile_client -t grpc-client .
+docker run --net grpc-net -p 50005:50005 grpc-client
+```
+
+To use docker to build and run the server
+```
+docker build -f Dockerfile_server -t grpc-server .
+docker run --net grpc-net -p 8080:8080 grpc-server
+```

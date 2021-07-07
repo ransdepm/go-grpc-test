@@ -67,7 +67,6 @@ type Orders struct {
 	TxTime   string `json:"created_at"`
 }
 
-// Subscribe lists all features contained within the given bounding Rectangle.
 func (s *pubSubServer) Subscribe(topic *pb.SubscribeRequest, stream pb.Pubsub_SubscribeServer) error {
 	for true {
 		var token = getAuth()
