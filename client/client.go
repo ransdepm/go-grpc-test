@@ -13,6 +13,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/joho/godotenv"
+	"pack.ag/amqp"
 
 	pb "github.com/ransdepm/go-grpc-test/pubsub"
 	"google.golang.org/grpc"
@@ -22,15 +23,26 @@ var (
 	serverAddr = flag.String("server_addr", goDotEnvVariable("SERVER_HOST")+":"+goDotEnvVariable("PORT"), "The server address in the format of host:port")
 )
 
-func grabTransactions(client pb.PubsubClient) {
+func HandleTransactions(client pb.PubsubClient, mq_session *amqp.Session) {
 	in := &pb.SubscribeRequest{
 		TopicName: "orders",
 	}
 
+	//Create gRPC stream connection with server
 	stream, err := client.Subscribe(context.Background(), in)
 	if err != nil {
 		log.Fatalf("%v.Subscribe(_) = _, %v", client, err)
 	}
+
+	//Create MQ send connection to populate MQ
+	sender, err := mq_session.NewSender(
+		amqp.LinkTargetAddress(goDotEnvVariable("MQ_QUEUE")),
+	)
+	if err != nil {
+		log.Fatal("Creating sender link:", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+
 	for {
 		transaction, err := stream.Recv()
 		if err == io.EOF {
@@ -39,15 +51,32 @@ func grabTransactions(client pb.PubsubClient) {
 		if err != nil {
 			log.Fatalf("%v.Subscribe(_) = _, %v", client, err)
 		}
+		//Add transaction to MQ.  For now print it out.
 		log.Println(prettyPrint(transaction))
+
+		// Send message
+		err = sender.Send(ctx, amqp.NewMessage(jsonByteArray(transaction)))
+		if err != nil {
+			log.Fatal("Sending message:", err)
+		}
 	}
+
+	sender.Close(ctx)
+	cancel()
 }
 
 func main() {
 	flag.Parse()
+
+	//Create client connection
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
+
+	//TBD: use JWT credentials when making connection
 	//grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")), grpc.WithPerRPCCredentials(jwtCreds))
+
+	//Add options for default interceptors that will allow for client retry 5 times when connections lost.
+	//TBD: Add more robust retry method
 	opts = append(opts, grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor()))
 	opts = append(opts, grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor()))
 
@@ -60,7 +89,20 @@ func main() {
 	defer conn.Close()
 	client := pb.NewPubsubClient(conn)
 
-	grabTransactions(client)
+	mq_client, err := amqp.Dial(goDotEnvVariable("MQ_INSTANCE"),
+		amqp.ConnSASLPlain(goDotEnvVariable("MQ_USERNAME"), goDotEnvVariable("MQ_PW")),
+	)
+	if err != nil {
+		log.Fatal("Dialing AMQP server:", err)
+	}
+	defer mq_client.Close()
+
+	mq_session, err := mq_client.NewSession()
+	if err != nil {
+		log.Fatal("Creating AMQP session:", err)
+	}
+
+	HandleTransactions(client, mq_session)
 }
 
 func CreateToken(userid uint64) (string, error) {
@@ -84,6 +126,11 @@ func prettyPrint(i interface{}) string {
 		string(s) +
 		"\n--------------------------------------------------------------------------\n"
 	return string(x)
+}
+
+func jsonByteArray(i interface{}) []byte {
+	s, _ := json.Marshal(i)
+	return []byte(string(s))
 }
 
 // use godot package to load/read the .env file and
