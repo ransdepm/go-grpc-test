@@ -41,7 +41,7 @@ func HandleTransactions(client pb.PubsubClient, mq_session *amqp.Session) {
 	if err != nil {
 		log.Fatal("Creating sender link:", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx := context.Background()
 
 	for {
 		transaction, err := stream.Recv()
@@ -62,7 +62,6 @@ func HandleTransactions(client pb.PubsubClient, mq_session *amqp.Session) {
 	}
 
 	sender.Close(ctx)
-	cancel()
 }
 
 func main() {
