@@ -9,4 +9,5 @@ require (
 	github.com/joho/godotenv v1.3.0 // indirect
 	google.golang.org/grpc v1.39.0
 	google.golang.org/protobuf v1.27.1
+	pack.ag/amqp v0.12.5 // indirect
 )
